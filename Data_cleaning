@@ -1,15 +1,4 @@
-##NBA MVP Metric
-##Christopher Vela
-##***********************************************
-##**__**********__***_________*******__**********
-##**\ \********/ /**|  _______|*****|  |*********
-##***\ \******/ /***|  |____********|  |*********
-##****\ \****/ /****|   ____|*******|  |*********    
-#******\ \**/ /*****|  |************|  |*********
-#*******\ \/ /******|  |______******|  |_______**
-##*******\__/*******|_________|*****|__________|*
-#************************************************
-##christophvel@gmail.com
+
 ##http://github.com/velaraptor/nba_mvp_metric
 
 
@@ -47,7 +36,7 @@ write.csv(mvp,file="mvp.csv")
 
 
 ##award voting
-award.voting<-file.path("http://www.basketball-reference.com/awards",c("awards_1980.html","awards_1981.html","awards_1982.html","awards_1983.html","awards_1984.html","awards_1985.html","awards_1986.html","awards_1987.html","awards_1988.html","awards_1989.html","awards_1990.html","awards_1991.html","awards_1992.html","awards_1992.html","awards_1993.html","awards_1994.html","awards_1995.html","awards_1996.html","awards_1997.html","awards_1998.html","awards_1999.html","awards_2000.html","awards_2001.html","awards_2002.html","awards_2003.html","awards_2004.html","awards_2005.html","awards_2006.html","awards_2007.html","awards_2008.html","awards_2009.html","awards_2010.html","awards_2011.html","awards_2012.html"))
+award.voting<-file.path("http://www.basketball-reference.com/awards",c("awards_1980.html","awards_1981.html","awards_1982.html","awards_1983.html","awards_1984.html","awards_1985.html","awards_1986.html","awards_1987.html","awards_1988.html","awards_1989.html","awards_1990.html","awards_1991.html","awards_1992.html","awards_1993.html","awards_1994.html","awards_1995.html","awards_1996.html","awards_1997.html","awards_1998.html","awards_1999.html","awards_2000.html","awards_2001.html","awards_2002.html","awards_2003.html","awards_2004.html","awards_2005.html","awards_2006.html","awards_2007.html","awards_2008.html","awards_2009.html","awards_2010.html","awards_2011.html","awards_2012.html"))
 award.vt<-lapply(award.voting,readHTMLTable)
 
 clean.list.multiple.tables<-function(list){
@@ -120,3 +109,110 @@ has.star<-function(list){
 
 s.fix.1<-lapply(s.fix.1,has.star)
 sa.fix.1<-lapply(sa.fix.1,has.star)
+
+
+has.multiple.entry<-function(list){
+	team<-list;
+	team<-team[!duplicated(team[,2]),];
+	return(team);	
+		
+}
+fixed.s<-lapply(s.fix.1,has.multiple.entry)
+fixed.sa<-lapply(sa.fix.1,has.multiple.entry)
+
+nba_1980<-merge(fixed.s[[1]],fixed.sa[[1]],by.x="totals.Player",by.y="advanced.Player")
+nba_1981<-merge(fixed.s[[2]],fixed.sa[[2]],by.x="totals.Player",by.y="advanced.Player")
+nba_1982<-merge(fixed.s[[3]],fixed.sa[[3]],by.x="totals.Player",by.y="advanced.Player")
+nba_1983<-merge(fixed.s[[4]],fixed.sa[[4]],by.x="totals.Player",by.y="advanced.Player")
+nba_1984<-merge(fixed.s[[5]],fixed.sa[[5]],by.x="totals.Player",by.y="advanced.Player")
+nba_1985<-merge(fixed.s[[6]],fixed.sa[[6]],by.x="totals.Player",by.y="advanced.Player")
+nba_1986<-merge(fixed.s[[7]],fixed.sa[[7]],by.x="totals.Player",by.y="advanced.Player")
+nba_1987<-merge(fixed.s[[8]],fixed.sa[[8]],by.x="totals.Player",by.y="advanced.Player")
+nba_1988<-merge(fixed.s[[9]],fixed.sa[[9]],by.x="totals.Player",by.y="advanced.Player")
+nba_1989<-merge(fixed.s[[10]],fixed.sa[[10]],by.x="totals.Player",by.y="advanced.Player")
+nba_1990<-merge(fixed.s[[11]],fixed.sa[[11]],by.x="totals.Player",by.y="advanced.Player")
+nba_1991<-merge(fixed.s[[12]],fixed.sa[[12]],by.x="totals.Player",by.y="advanced.Player")
+nba_1992<-merge(fixed.s[[13]],fixed.sa[[13]],by.x="totals.Player",by.y="advanced.Player")
+nba_1993<-merge(fixed.s[[14]],fixed.sa[[14]],by.x="totals.Player",by.y="advanced.Player")
+nba_1994<-merge(fixed.s[[15]],fixed.sa[[15]],by.x="totals.Player",by.y="advanced.Player")
+nba_1995<-merge(fixed.s[[16]],fixed.sa[[16]],by.x="totals.Player",by.y="advanced.Player")
+nba_1996<-merge(fixed.s[[17]],fixed.sa[[17]],by.x="totals.Player",by.y="advanced.Player")
+nba_1997<-merge(fixed.s[[18]],fixed.sa[[18]],by.x="totals.Player",by.y="advanced.Player")
+nba_1998<-merge(fixed.s[[19]],fixed.sa[[19]],by.x="totals.Player",by.y="advanced.Player")
+nba_1999<-merge(fixed.s[[20]],fixed.sa[[20]],by.x="totals.Player",by.y="advanced.Player")
+nba_2000<-merge(fixed.s[[21]],fixed.sa[[21]],by.x="totals.Player",by.y="advanced.Player")
+nba_2001<-merge(fixed.s[[22]],fixed.sa[[22]],by.x="totals.Player",by.y="advanced.Player")
+nba_2002<-merge(fixed.s[[23]],fixed.sa[[23]],by.x="totals.Player",by.y="advanced.Player")
+nba_2003<-merge(fixed.s[[24]],fixed.sa[[24]],by.x="totals.Player",by.y="advanced.Player")
+nba_2004<-merge(fixed.s[[25]],fixed.sa[[25]],by.x="totals.Player",by.y="advanced.Player")
+nba_2005<-merge(fixed.s[[26]],fixed.sa[[26]],by.x="totals.Player",by.y="advanced.Player")
+nba_2006<-merge(fixed.s[[27]],fixed.sa[[27]],by.x="totals.Player",by.y="advanced.Player")
+nba_2007<-merge(fixed.s[[28]],fixed.sa[[28]],by.x="totals.Player",by.y="advanced.Player")
+nba_2008<-merge(fixed.s[[29]],fixed.sa[[29]],by.x="totals.Player",by.y="advanced.Player")
+nba_2009<-merge(fixed.s[[30]],fixed.sa[[30]],by.x="totals.Player",by.y="advanced.Player")
+nba_2010<-merge(fixed.s[[31]],fixed.sa[[31]],by.x="totals.Player",by.y="advanced.Player")
+nba_2011<-merge(fixed.s[[32]],fixed.sa[[32]],by.x="totals.Player",by.y="advanced.Player")
+nba_2012<-merge(fixed.s[[33]],fixed.sa[[33]],by.x="totals.Player",by.y="advanced.Player")
+
+
+fix.award<-function(list){
+	team<-list;
+	team<-team[,c(2,5,6)];
+	return(team);
+}
+l<-lapply(l.a,fix.award)
+
+ndf<-list(nba_1980,nba_1981,nba_1982,nba_1983,nba_1984,nba_1985,nba_1986,nba_1987,nba_1988,nba_1989,nba_1990,nba_1991,nba_1992,nba_1993,nba_1994,nba_1995,nba_1996,nba_1997,nba_1998,nba_1999,nba_2000,nba_2001,nba_2002,nba_2003,nba_2004,nba_2005,nba_2006,nba_2007,nba_2008,nba_2009,nba_2010,nba_2011,nba_2012)
+
+fix.mvp<-function(mvp){
+	mvp<-mvp;
+	mvp[,2]<-as.character(mvp[,2]);
+	mvp[,2]<-as.numeric(mvp[,2]);
+	mvp[,3]<-as.character(mvp[,3]);
+	mvp[,3]<-as.numeric(mvp[,3]);
+	colnames(mvp)[3]<-"Pts.Won"
+	return(mvp);
+}
+l.1<-lapply(l,fix.mvp)
+
+fix.columns.ndf<-function(list){
+	x<-list;
+	x<-data.frame(x,0,0);
+	colnames(x)[55]<-"First";
+	colnames(x)[56]<-"Pts.Won";
+	colnames(x)[1]<-"Player";
+	x$totals_Rk<-NULL;
+	x$advanced.Rk<-NULL;
+	x$advanced.Pos<-NULL;
+	x$advanced.Age<-NULL;
+	x$advanced.Tm<-NULL;
+	x$advanced.G<-NULL;
+	x$advanced.MP<-NULL;
+	return(x);
+}
+
+ndf.1<-lapply(ndf,fix.columns.ndf)
+
+
+clean<-function(totals,mvp){
+	x<-totals;
+	x[x$Player %in% mvp$Player,49]<-mvp$First;
+	x[x$Player %in% mvp$Player,50]<-mvp$Pts.Won;
+	return(x)}
+	
+x<-mapply(clean,totals=ndf.1,mvp=l.1)
+x.1<-t(x)
+
+cleanup<-function(x){
+	lis<-vector("list",33)
+	for(i in 1:33){
+		d<-data.frame(x[i,])
+		lis[[i]]<-d
+		}
+		return(lis)
+}
+
+clee<-cleanup(x.1)
+names(clee)<-c("1980","1981","1982","1983","1984",'1985',"1986","1987","1988","1989","1990","1991","1992","1993","1994",'1995',"1996","1997","1998","1999","2000","2001","2002","2003","2004","2005","2006","2007","2008","2009","2010","2011","2012")
+
+lapply(names(clee),function(X) write.csv(clee[[X]],file=paste0(X,".csv")))
