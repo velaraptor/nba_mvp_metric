@@ -1,0 +1,13 @@
+twelve<-read.csv("2012.csv")
+library(dplyr)
+too<-twelve[twelve$totals.Tm=="SAS",]
+too$pts.min=(too$totals.PTS/too$totals.MP)
+too$min.game=(too$totals.MP/too$totals.G)
+too$per.game=(too$pts.min*too$min.game)
+sum(too$per.game)
+sum(too$min.game)
+g<-group_by(too,Player)
+gg<-summarise(g,per.game)
+arrange(gg,desc(pts.min))
+arrange(gg,desc(per.game))
+too$per.game.1=(too$totals.PTS/too$totals.G)
