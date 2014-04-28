@@ -1,0 +1,30 @@
+ 1  Angeles Lakers  90432556
+ 2 Orlando Magic  90395938
+ 3 Dallas Mavericks  84643496
+ 4 Boston Celtics  81769284
+ 5 Utah Jazz   75188482
+ 6 Portland Trailblazers  74445767
+ 7 Houston Rockets  72315654
+ 8 Atlanta Hawks  70099179
+ 9 Memphis Grizzlies  70022595
+10 Toronto Raptors  69984513
+11  Antonio Spurs  69366122
+12 Milwaukee Bucks  68479340
+13 Philadelphia 76ers  68417454
+14 Golden  Warriors  68367250
+15  Orleans Hornets  67985781
+16 Denver Nuggets  67650513
+17  York Knicks  66426486
+18 Phoenix Suns  65966400
+19 Charlotte Bobcats  65672517
+20 Indiana Pacers  65057899
+21 Detroit Pistons  65020029
+22 Miami Heat  64251508
+23  Jersey Nets  58494181
+24 Washington Wizards  58324988
+25 Oklahoma  Thunder  55922488
+26 Cleveland Cavaliers  53928558
+27 Chicago Bulls  53658187
+28 Minnesota Timberwolves  53458231
+29  Angeles Clippers  52988221
+30 Sacramento Kings  44991883

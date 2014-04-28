@@ -1,0 +1,24 @@
+Team                      Payroll 
+Los Angeles Lakers      $8,579,750
+New Jersey Nets         $6,840,500
+Philadelphia 76ers      $6,825,500
+New York Knicks         $6,691,500
+Boston Celtics          $6,560,000
+Seattle Supersonics     $5,683,333
+Los Angeles Clippers    $4,745,000
+Detroit Pistons         $4,603,666
+Chicago Bulls           $4,486,000
+Washington Bullets      $4,381,383
+Golden State Warriors   $4,365,833
+Houston Rockets         $4,259,000
+Phoenix Suns            $4,189,500
+San Antonio Spurs       $4,052,846
+Dallas Mavericks        $4,052,346
+Sacramento Kings        $4,052,000
+Cleveland Cavaliers     $3,920,666
+Portland Trailblazers   $3,831,000
+Indiana Pacers          $3,758,200
+Atlanta Hawks           $3,671,250
+Milwaukee Bucks         $3,661,332
+Denver Nuggets		$3,425,500
+Utah Jazz		$2,914,500
