@@ -1,5 +1,6 @@
 NBA MVP Metric
 By Christopher Vela and Daniel Schwartz
+
 I. Introduction
 
 At the end of each season, the National Basketball Association designates the most valuable player
