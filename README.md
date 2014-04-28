@@ -1,8 +1,9 @@
 NBA MVP Metric
+==============
 By Christopher Vela and Daniel Schwartz
 
-I. Introduction
-
+Introduction
+===============
 At the end of each season, the National Basketball Association designates the most valuable player
 (MVP) based on a voting system whereby broadcasters and journalists rank the ﬁve best performing players. Points are then assigned inversely with rank for each ballot cast. The rank-point
 equivalencies are as follows:
