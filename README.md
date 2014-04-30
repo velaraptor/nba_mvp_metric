@@ -51,6 +51,7 @@ assumption, we will examine models for both the full 23 seasons as well as for t
 seasons (n = 166). The second assumption is that the joint distribution of the covariates for players
 in the running for MVP are independent from year to year. This assumption becomes important
 as there are many recurring players in our sample.
+
 Page with our results can be seen at http://velaraptor.github.io/nba_mvp_metric/
 Copyright 2014 Christopher Vela & Daniel Schwartz
 
