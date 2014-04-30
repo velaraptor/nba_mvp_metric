@@ -3,11 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Basketball MVP Metric by velaraptor</title>
+    <title>Predicting Voting Behavior For the NBA Most Valuable Player by velaraptor</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -16,57 +15,84 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1 class="header">Basketball MVP Metric</h1>
-        <p class="header"></p>
+        <h1>Predicting Voting Behavior For the NBA Most Valuable Player</h1>
+        <p></p>
+
+        <p class="view"><a href="https://github.com/velaraptor/nba_mvp_metric">View the Project on GitHub <small>velaraptor/nba_mvp_metric</small></a></p>
+
 
         <ul>
-          <li class="download"><a class="buttons" href="https://github.com/velaraptor/nba_mvp_metric/zipball/master">Download ZIP</a></li>
-          <li class="download"><a class="buttons" href="https://github.com/velaraptor/nba_mvp_metric/tarball/master">Download TAR</a></li>
-          <li><a class="buttons github" href="https://github.com/velaraptor/nba_mvp_metric">View On GitHub</a></li>
+          <li><a href="https://github.com/velaraptor/nba_mvp_metric/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/velaraptor/nba_mvp_metric/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/velaraptor/nba_mvp_metric">View On <strong>GitHub</strong></a></li>
         </ul>
-
-        <p class="header">This project is maintained by <a class="header name" href="https://github.com/velaraptor">velaraptor</a></p>
-
-
       </header>
       <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <h1>
+<a name="nba-mvp-metric" class="anchor" href="#nba-mvp-metric"><span class="octicon octicon-link"></span></a>NBA MVP Metric</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>By Christopher Vela and Daniel Schwartz</p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
+<h1>
+<a name="introduction" class="anchor" href="#introduction"><span class="octicon octicon-link"></span></a>Introduction</h1>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>At the end of each season, the National Basketball Association designates the most valuable player
+(MVP) based on a voting system whereby broadcasters and journalists rank the ﬁve best performing players. Points are then assigned inversely with rank for each ballot cast. The rank-point
+equivalencies are as follows:</p>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<p>rank for a given ballot points</p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>1st 10</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p>2nd 7</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>3rd 5</p>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>4th 3</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>5th 1</p>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<p>The award is given to the player receiving the most points.
+In recent years, the MVP has been the subject of much criticism from fans and sports commenta-
+tors. Wrote Fansided writer Phil Daniels: “The NBA fails to concretely deﬁne the criteria for the
+Maurice Podoloﬀ Trophy winner. The only criterion is that the MVP is awarded annually to the
+’most valuable player.’ Value is not deﬁned. Scope is not limited.” Many have also claimed that
+the award has become a function of player popularity and media attention rather than performance.
+To investigate voting behavior, we examine historical data from 1986-2012, looking at metrics in
+several areas: player age, position, individual performance, contribution in the context of a team
+and salary. We assume here that player salary functions as a proxy variable for understanding
+popularity and overall market demand for a particular player. We narrow our focus to the sub-
+set of players receiving positive point counts (typically a handful of players each season). Our
+question of interest can then be distilled to: “Among the top-performing players, which character-
+istics best predict total points?” Data pertaining to basketball metrics, player age, position and
+MVP voting was drawn from <a href="http://www.basketball-reference.com">www.basketball-reference.com</a>. Player salary data was taken from
+<a href="http://www.eskimo.com/%7Epbender">www.eskimo.com/~pbender</a>.</p>
 
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>Two seasons of data (1998-1999 and 2011-2012) were excluded from our analysis as player negotia-
+tions prevented completion of these seasons’ games. The 1987-1988 and 1990-1991 seasons were also
+excluded as player salary data could not be found. Total point counts per player were normalized
+by the total number of points available since the total number of ballots cast diﬀers from year to
+year, giving a response variable that can be interpreted as the proportion of the vote captured by a
+particular player. Player salaries were normalized by the cumulative league salary for the particular
+year to account for inﬂation.</p>
+
+<p>After aggregating all of the positive point-receiving players over 23 seasons we are left with a sample
+size of n = 374. This method makes two important assumptions. The ﬁrst is that the tastes and
+preferences of the sports commentariat are roughly stable over time. To check the validity of this
+assumption, we will examine models for both the full 23 seasons as well as for the most recent 10
+seasons (n = 166). The second assumption is that the joint distribution of the covariates for players
+in the running for MVP are independent from year to year. This assumption becomes important
+as there are many recurring players in our sample.
+<img src="http://imgur.com/fF7vuQd" alt=""><img src="http://imgur.com/AFOsKgY" alt=""><img src="http://imgur.com/W5goenE" alt=""><img src="http://imgur.com/Vv4qn4K" alt=""><img src="http://imgur.com/WJPO1EI" alt=""><img src="http://imgur.com/wse5WBV" alt=""><img src="http://imgur.com/z0Z9BeO" alt=""><img src="http://imgur.com/nSHVudt" alt=""></p>
+
+<p>Copyright 2014 Christopher Vela &amp; Daniel Schwartz</p>
       </section>
       <footer>
-        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+        <p>This project is maintained by <a href="https://github.com/velaraptor">velaraptor</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
-    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
-		
+    <script src="javascripts/scale.fix.js"></script>
+    
   </body>
 </html>
