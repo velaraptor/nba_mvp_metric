@@ -53,6 +53,7 @@ in the running for MVP are independent from year to year. This assumption become
 as there are many recurring players in our sample.
 
 Page with our results can be seen at http://velaraptor.github.io/nba_mvp_metric/
+
 Copyright 2014 Christopher Vela & Daniel Schwartz
 
 
