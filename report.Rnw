@@ -1,0 +1,637 @@
+\documentclass[11pt]{report}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{url}
+\begin{document}
+
+\SweaveOpts{concordance=TRUE}
+
+\begin{center}
+\textbf{Predicting voting behavior for the NBA Most Valuable Player Award} \\
+Christopher Vela and Daniel Schwartz \\
+Advanced Data Analysis, Spring 2014 \\
+Final Project
+\end{center}
+
+\noindent \textbf{Abstract}  \\
+
+\noindent \textbf{I. Introduction}  \\
+
+\noindent At the end of each season, the National Basketball Association designates the most valuable player (MVP) based on a voting system in which select basketball journalists assign ranks to who they believe are the five best players for the season. Points are then assigned inversely with rank for each ballot cast. The rank-point equivalencies are as follows: \\
+
+    \begin{tabular}{ll}
+    \textbf{rank for a given ballot} & \textbf{points} \\
+    1st                     & 10     \\
+    2nd                     & 7      \\
+    3rd                     & 5      \\
+    4th                     & 3      \\
+    5th                     & 1      \\
+    \end{tabular} \\ \\
+
+\noindent The award is given to the player receiving the most points. \\
+
+\noindent In recent years, the MVP has been the subject of much criticism from fans and sports commentators. Wrote \emph{Fansided} writer Phil Daniels: ``The NBA fails to concretely define the criteria for the Maurice Podoloff Trophy winner. The only criterion is that the MVP is awarded annually to the 'most valuable player.' Value is not defined. Scope is not limited" (Daniels 1). Many have also claimed that the award is given based on popularity and media attention rather than the performance of a player. \\
+
+\noindent To investigate voting behavior and identify important predictors of success in the MVP race, we examine historical data from 1986-2012, looking at metrics in several areas: player age, position, individual performance, contribution in the context of a team and salary. We assume here that player salary functions as a proxy variable for understanding popularity and overall market demand for a particular player. We narrow our focus to the subset of players receiving positive point counts (typically a handful of players each season). Our question of interest can then be distilled to: ``Among the top-performing players each season, which characteristics are best associated with MVP success?" Data pertaining to basketball metrics, player age, position and MVP voting was downloaded from \url{www.basketball-reference.com}. Player salary data was taken from \url{www.eskimo.com/~pbender}. \\
+
+\noindent Two seasons of data (1998-1999 and 2011-2012) were excluded from our analysis as player negotiations prevented completion of these seasons' games. The 1987-1988 and 1990-1991 seasons were also excluded as player salary data could not be found. Total point counts per player were normalized by the total number of points available since the total number of ballots cast differs from year to year, giving a response variable that can be interpreted as the proportion of the vote captured by a particular player. Player salaries were normalized by the cumulative league salary for the particular year to account for inflation. \\
+
+\noindent After aggregating all of the positive point-receiving players over 23 seasons we are left with a sample size of n = 374. This method makes two important assumptions. The first is that the tastes and preferences of basketball media sources participating in the vote are stable over time.  With the advent of sabermetrics and newer forms of analyzing sports data (see the Michael Lewis book, "Moneyball"), it's certainly possible that new trends could be emerging that are influencing how players are perceived. We ignore this possibility in weighing the samples equally over time for model-building. The second assumption is that player performance has no time-dependence. We assume the performance of a player like Lebron James, for instance, who has been successful in the MVP race over consecutive seasons, is not influenced by previous seasons' success. \\
+
+\noindent Our paper is organized into four components. The first comprises an exploratory analysis of this rich data set and clues from the data structure that led us to deploy regression-based tools. The second part focuses on our results from ridge regression as well as model-checking, statistical analysis and model validation using in-sample prediction error. The third part focuses on results from implementing stepwise regression, along with a discussion of model-checking, analysis and predictive error. We conclude with a discussion of our findings using these two methods and interpretation. \\
+
+\noindent \textbf{II. Data Structure and Exploratory Analysis }\\
+
+\noindent For both the full (23 seasons of player data) and recent (10 most recent seasons) data sets, there are p = 46 covariates falling into the following five categories: \\
+
+    \begin{tabular}{ll}
+    AGE (1)      & continuous variable for player age                                         \\
+    TOTALS (24)  & continuous variables, individual player performance in season              \\
+    POSITION (1) & categorical variable, five possible positions                              \\
+    ADVANCED (19) & continuous variables, individual player contribution to the team in season \\
+    SALARY (1)   & continuous variable, normalized player salary in season             \\
+    \end{tabular} \\ \\
+
+\noindent Our exploratory analysis of the full data set begins with simple 2D scatter plots of normalized points against various predictors, color-coded for player position:
+
+<<echo=FALSE,fig=TRUE>>=
+setwd("~/Desktop")
+full = read.csv("fulltable.csv",header=T)
+attach(full)
+par(mfrow=c(3,2))
+plot(totals.2P,Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+plot(log(Salary),Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+plot(advanced.PER,Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+plot(totals.Age,Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+plot(totals.FT,Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+plot(advanced.USG.,Pts.Won,pch=21,bg=c("red","green","blue","yellow","orange")[unclass(full$totals.Pos)])
+legend('topleft',levels(full[,2]),col=c("red","green","blue","yellow","orange"),pch=21)
+detach(full)
+@
+
+\noindent Several linear relationships were observed through visual inspection of plots of the response variable against the predictors, leading us to begin with multiple regression. Assuming a high degree of correlation among the covariates (the best players should have higher metrics, and vice versa), we then examined a pairwise scatterplot matrix of some of the predictors, which confirmed our initial suspicions: \\
+
+<<echo=FALSE,fig=TRUE>>=
+dat1 = full[,c(11,12,13)]
+dat2 = full[,c(31,33,37)]
+dat4 = data.frame(dat1,dat2)
+pairs(dat4)
+@
+
+\noindent Multicollinearity was further examined by looking at variance inflation factors (VIF) associated with estimated standardized regression coefficients. We examined VIF values for predictors in a preliminary model based on our intuition of which predictors would be critical. Examining this preliminary model, we found several VIF values greatly exceeding 10, indicating serious multicollinearity among the predictors. The mean VIF value was 18.80553, implying that the expected sum of squared errors here is close to 20 times greater than it would be if these particular covariates were uncorrelated (Kutner, Nachtsheim and Neter 409). 
+
+<<echo=FALSE,results=HIDE>>=
+full[190,13]=0
+full[282,13]=0
+full[284,13]=0
+full[285,12]=341
+full[285,13]=0.334
+full[271,13]=0
+full[254,13]=0
+full[231,13]=0
+full[211,13]=0
+full[159,13]=0
+full[47,13]=0
+full[12,13]=0
+full[8,13]=0
+full[303,13]=0
+full[313,13]=0
+dat1 = full[,c(3)]
+dat2 = full[,c(5:47)]
+dat3 = full[,c(49)]
+dat4 = full[,c(48)]
+dat = data.frame(dat1,dat2,dat3,dat4)
+dat = data.matrix(dat)
+colnames(dat)[1] <- "totals.Age"
+colnames(dat)[45] <- "Salary"
+colnames(dat)[46] <- "Pts.Won"
+# center dat
+for (j in 1:46){
+  dat[,j] = dat[,j] - mean(dat[,j])
+}
+# scale
+for (g in 1:46){
+  dat[,j] = (1/sqrt(373))*(dat[,j]*(1/sd(dat[,j])))
+}
+Xy.stand = data.frame(dat,full[,2])
+colnames(Xy.stand)[47] <- "totals.Pos"
+std.model = lm(Pts.Won~totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary+advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=Xy.stand)
+library("car", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")
+vif(std.model)
+mean(Xy.stand[,1])
+sd(Xy.stand[,1])
+@
+
+    \begin{tabular}{ll}
+    \textbf{Predictor}     & \textbf{VIF associated with estimated coefficient}  \\
+    totals.Age    &    	 	 	1.464878                           \\
+    totals.MP     & 7.121350                                   \\
+    totals.GS     & 3.337711                                   \\
+    totals.3P.    &  		 	 	1.789849                            \\
+    totals.2PA    & 119.688765                                 \\
+    Salary        &  		 	 	1.504114                            \\
+    advanced.TRB  &  		 	 	7.441620                            \\
+    advanced.TOV. &  		 	 	3.405404                            \\
+    advanced.DWS  &  		 	 	4.082178                            \\
+    totals.Pos    &  		 	 	26.899707                           \\
+    advanced.WS48 & 4.257684                                   \\
+    totals.BLK    & 4.539006                                   \\
+    totals.PF     & 2.545500                                   \\
+    totals.FT     & 6.580449                                   \\
+    advanced.eFG. & 8.821838                                   \\
+    advanced.DWS  & 4.082178                                   \\
+    totals.PTS    & 24.857939                                  \\
+    totals.2P     & 106.079415                                 \\
+    \end{tabular} \\ \\
+
+\noindent \textbf{III. Implementation of Ridge Regression and Results} \\
+
+\noindent We implemented ridge regression on a subset of 20 standardized predictors, many of which we assumed to be important in MVP success based on exploratory data analysis as well as our own basketball intuition. Ridge trace was employed to select three candidate models based upon stabilization of the magnitudes of the estimates, as well as minimization of variance inflation factors for the coefficients. An indicator variable was created for whether the candidate model correctly predicts the winner of the MVP race for each season. We thus are able to report a ``misclassification" rate for each of the three models. 
+
+<<echo=FALSE>>=
+library("MASS", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")
+ridge<-lm.ridge(Pts.Won~0+totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary+advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=Xy.stand,lambda=seq(0,15,by=.1))
+@
+
+\begin{figure}[t!]
+  \centering
+
+<<fig=TRUE,echo=FALSE,width=5,height=3>>=
+plot(ridge,main="blah",xlab="lambda")
+abline(v=6.5)
+abline(v=11)
+abline(v=15)
+@
+
+\end{figure}
+
+\noindent Applying this methodology, we see that the prediction error (for the standardized estimates fitted using standardized data matrix of 20 predictors) is minimized for the first ridge regression model ($\lambda$ = 6.5). \\
+
+    \begin{tabular}{ll}
+    \textbf{$\lambda$} & \textbf{prediction error (in-sample mean-squared error)} \\
+    6.5    &       	 	0.001346844                              \\
+    11     &  		 	 	0.001356818                              \\
+    15     &  		 	 	0.00136498                               \\
+    \end{tabular} \\ \\
+    
+\noindent Applying the standardized ridge models to the predictors, we measure the misclassification rate by looking at the proportion of seasons where the model incorrectly predicted the MVP for that season. The computed misclassification error rate was found to be equal and approximately 50 percent for all three ridge models under consideration (error = 0.5217391). We tentatively choose the model which minimizes the estimated mean-squared error (in-sample) for normalized point score ($\lambda$ = 6.5). \\
+
+<<echo=FALSE,results=HIDE>>=
+ridge.1a<-lm.ridge(Pts.Won~totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary+advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=Xy.stand,lambda=6.5)
+ridge.2<-lm.ridge(Pts.Won~totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary+advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=Xy.stand,lambda=11)
+ridge.3<-lm.ridge(Pts.Won~totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary+advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=Xy.stand,lambda=15)
+cof1 = coef(ridge.1a)
+cof1 = as.matrix(cof1)
+cof2 = coef(ridge.2)
+cof2 = as.matrix(cof2)
+cof3 = coef(ridge.3)
+cof3 = as.matrix(cof3)
+library("dummies", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")
+data.position = dummy(full$totals.Pos)
+X.stand.1 = data.frame(Xy.stand,data.position)
+colnames(X.stand.1)[48] <- "totals.PosC"
+colnames(X.stand.1)[49] <- "totals.PosPF"
+colnames(X.stand.1)[50] <- "totals.PosPG"
+colnames(X.stand.1)[51] <- "totals.PosSF"
+colnames(X.stand.1)[52] <- "totals.PosSG"
+X.stand.mod = X.stand.1[,c("totals.Age","totals.G","totals.GS","totals.3P.","totals.2PA","Salary","advanced.TRB.","advanced.TOV.","advanced.DWS","totals.PosPF","totals.PosPG","totals.PosSF","totals.PosSG","advanced.WS48","totals.BLK","totals.PF","totals.FT","advanced.eFG.","totals.PTS","totals.2P","totals.MP")]
+class(X.stand.mod)
+b = data.frame(rep(1,374))
+X.stand.mod = data.frame(b,X.stand.mod)
+X.stand.mod = data.matrix(X.stand.mod)
+pred.y.1 = X.stand.mod%*%cof1
+pred.y.2 = X.stand.mod%*%cof2
+pred.y.3 = X.stand.mod%*%cof3
+y.true = Xy.stand[,46]
+ncol(Xy.stand)
+est.mse.1 = sum(((pred.y.1 - y.true)^2))/374
+est.mse.2 = sum(((pred.y.2 - y.true)^2))/374
+est.mse.3 = sum(((pred.y.3 - y.true)^2))/374
+est.mse.1
+est.mse.2
+est.mse.3
+@
+
+<<echo=FALSE,results=HIDE>>=
+full.s = read.csv("fulltable_new_1.csv",header=T)
+winner = as.numeric(full.s[,50])
+a = mat.or.vec(23,1)
+a[1]=which.max(pred.y.1[1:18])
+a[2]=which.max(pred.y.1[19:35]) + 18
+a[3]=which.max(pred.y.1[36:54]) + 35
+a[4]=which.max(pred.y.1[55:74]) + 54
+a[5]=which.max(pred.y.1[75:91]) + 74
+a[6]=which.max(pred.y.1[92:105]) + 91
+a[7]=which.max(pred.y.1[106:122]) + 105
+a[8]=which.max(pred.y.1[123:137]) + 122
+a[9]=which.max(pred.y.1[138:154]) + 137
+a[10]=which.max(pred.y.1[155:174]) + 154
+a[11]=which.max(pred.y.1[175:193]) + 174
+a[12]=which.max(pred.y.1[194:209]) + 193
+a[13]=which.max(pred.y.1[210:226]) + 209
+a[14]=which.max(pred.y.1[227:244]) + 226
+a[15]=which.max(pred.y.1[245:257]) + 244
+a[16]=which.max(pred.y.1[258:273]) + 257
+a[17]=which.max(pred.y.1[274:289]) + 273
+a[18]=which.max(pred.y.1[290:300]) + 289
+a[19]=which.max(pred.y.1[301:317]) + 300
+a[20]=which.max(pred.y.1[318:334]) + 317
+a[21]=which.max(pred.y.1[335:346]) + 334
+a[22]=which.max(pred.y.1[347:361]) + 346
+a[23]=which.max(pred.y.1[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.1 = (sum((b - winner)^2)/2)/23
+mis.rate.1
+@
+
+<<echo=FALSE,results=HIDE>>=
+a = mat.or.vec(23,1)
+a[1]=which.max(pred.y.2[1:18])
+a[2]=which.max(pred.y.2[19:35]) + 18
+a[3]=which.max(pred.y.2[36:54]) + 35
+a[4]=which.max(pred.y.2[55:74]) + 54
+a[5]=which.max(pred.y.2[75:91]) + 74
+a[6]=which.max(pred.y.2[92:105]) + 91
+a[7]=which.max(pred.y.2[106:122]) + 105
+a[8]=which.max(pred.y.2[123:137]) + 122
+a[9]=which.max(pred.y.2[138:154]) + 137
+a[10]=which.max(pred.y.2[155:174]) + 154
+a[11]=which.max(pred.y.2[175:193]) + 174
+a[12]=which.max(pred.y.2[194:209]) + 193
+a[13]=which.max(pred.y.2[210:226]) + 209
+a[14]=which.max(pred.y.2[227:244]) + 226
+a[15]=which.max(pred.y.2[245:257]) + 244
+a[16]=which.max(pred.y.2[258:273]) + 257
+a[17]=which.max(pred.y.2[274:289]) + 273
+a[18]=which.max(pred.y.2[290:300]) + 289
+a[19]=which.max(pred.y.2[301:317]) + 300
+a[20]=which.max(pred.y.2[318:334]) + 317
+a[21]=which.max(pred.y.2[335:346]) + 334
+a[22]=which.max(pred.y.2[347:361]) + 346
+a[23]=which.max(pred.y.2[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.2 = (sum((b - winner)^2)/2)/23
+mis.rate.2
+@
+
+<<echo=FALSE,results=HIDE>>=
+a = mat.or.vec(23,1)
+a[1]=which.max(pred.y.3[1:18])
+a[2]=which.max(pred.y.3[19:35]) + 18
+a[3]=which.max(pred.y.3[36:54]) + 35
+a[4]=which.max(pred.y.3[55:74]) + 54
+a[5]=which.max(pred.y.3[75:91]) + 74
+a[6]=which.max(pred.y.3[92:105]) + 91
+a[7]=which.max(pred.y.3[106:122]) + 105
+a[8]=which.max(pred.y.3[123:137]) + 122
+a[9]=which.max(pred.y.3[138:154]) + 137
+a[10]=which.max(pred.y.3[155:174]) + 154
+a[11]=which.max(pred.y.3[175:193]) + 174
+a[12]=which.max(pred.y.3[194:209]) + 193
+a[13]=which.max(pred.y.3[210:226]) + 209
+a[14]=which.max(pred.y.3[227:244]) + 226
+a[15]=which.max(pred.y.3[245:257]) + 244
+a[16]=which.max(pred.y.3[258:273]) + 257
+a[17]=which.max(pred.y.3[274:289]) + 273
+a[18]=which.max(pred.y.3[290:300]) + 289
+a[19]=which.max(pred.y.3[301:317]) + 300
+a[20]=which.max(pred.y.3[318:334]) + 317
+a[21]=which.max(pred.y.3[335:346]) + 334
+a[22]=which.max(pred.y.3[347:361]) + 346
+a[23]=which.max(pred.y.3[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.3 = (sum((b - winner)^2)/2)/23
+mis.rate.3
+@
+
+\noindent We now examine a plot of the residuals for the first ridge model to check the assumptions of constant variance and independence of the error terms. 
+
+\begin{figure}[t!]
+  \centering
+<<fig=TRUE,echo=FALSE>>=
+resid = pred.y.1 - y.true
+plot(pred.y.1,resid,main="Residual Plot for Ridge Regression, Lambda = 6.5",xlab="Fitted Values",ylab="Residual")
+dev.new(width=1, height=1)
+@
+
+ \end{figure}
+
+\noindent The residuals appear to be scattered approximately randomly about the zero line, however, there is a strong linear trend for the negative fitted values, suggesting possible lack of independence. We conclude this section by deriving 95 percent confidence intervals for the estimated standardized ridge coefficients by bootstrapping. We use the reflection method (Kutner, Nachtsheim and Neter 460) using random X sampling to sample (with replacement) 500 bootstrap samples. Potential issues with model assumptions (evidenced by the residual plot) led us to use random X sampling for the bootstrapping procedure. \\
+
+<<echo=FALSE,results=HIDE>>=
+big.Mat = mat.or.vec(22,500)
+for (j in 1:500){
+  mysample <- Xy.stand[sample(1:nrow(Xy.stand),374,replace=TRUE),]
+  ridge.1<-lm.ridge(Pts.Won~totals.Age+totals.G+totals.GS+totals.3P.+totals.2PA+Salary  +advanced.TRB.+advanced.TOV.+advanced.DWS+totals.Pos+advanced.WS48+totals.BLK+totals.PF+totals.FT+advanced.eFG.+advanced.DWS+totals.PTS+totals.2P+totals.MP,data=mysample,lambda=6.5)
+  ridge.1
+class(ridge.1)
+cof1 = coef(ridge.1)
+cof1 = as.matrix(cof1)
+big.Mat[,j] = cof1
+}
+qt = mat.or.vec(22,2)
+for (g in 1:22){
+  qt[g,1] = quantile(big.Mat[g,],.025) 
+  qt[g,2] = quantile(big.Mat[g,],.975) 
+}
+d = mat.or.vec(22,2)
+
+for (y in 1:22){
+  d[y,1] = cof1[y] - qt[y,1]
+  d[y,2] = qt[y,2] - cof1[y]
+}
+bounds = mat.or.vec(22,2)
+for (s in 1:22){
+  bounds[s,1] = cof1[s] - d[s,2]
+  bounds[s,2] =  cof1[s] + d[s,1]
+}
+bounds
+cof1
+@
+
+    \begin{tabular}{llll}
+    \textbf{X}     & \textbf{Est Std Ridge Coef} & \textbf{Lower Bound} & \textbf{Upper Bound }\\
+    totals.Age    &    	 	 	5.725143e-04                       &  		 	 	-3.178651e-04          &  		 	 	1.681078e-03           \\
+    totals.G      &  		 	 	3.607875e-04                       & 9.629045e-05                  &  		 	 	1.603980e-03           \\
+    totals.GS     &  		 	 	-3.436066e-04                      &  		 	 	-1.142715e-03          &  		 	 	-3.136386e-04          \\
+    totals.3P.    &  		 	 	-1.840439e-03                      &  		 	 	-2.984289e-02          &  		 	 	3.112270e-02           \\
+    totals.2PA    &  		 	 	1.987722e-05                       & -8.327357e-06                 & 4.901279e-05                  \\
+    Salary        &  		 	 	1.270249e+00                       &  		 	 	-2.910182e-01          & 2.059804e+00                  \\
+    advanced.TRB. &  		 	 	1.595237e-03                       & 4.957823e-04                  & 2.951402e-03                  \\
+    advanced.TOV. &  		 	 	3.282309e-03                       & 2.102119e-03                  &  		 	 	5.451165e-03           \\
+    advanced.DWS  &  		 	 	2.726660e-03                       & -3.583030e-03                 &  		 	 	5.341554e-03           \\
+    totals.PosPF  &  		 	 	-1.565887e-03                      &  -1.834681e-02                &  		 	 	5.405844e-03           \\
+    totals.PosPG  & 2.413706e-02                              &  		 	 	7.448991e-03           &  		 	 	4.228708e-02           \\
+    totals.PosSF  & 7.152883e-03                              &  		 	 	-1.106631e-02          & 1.844852e-02                  \\
+    totals.PosSG  & 1.205362e-02                              &  		 	 	-9.094200e-03          &  		 	 	2.371916e-02           \\
+    advanced.WS48 &  		 	 	5.831554e-01                       &  		 	 	5.949472e-01           &  		 	 	8.943461e-01           \\
+    totals.BLK    & 7.547819e-05                              &  		 	 	-9.202837e-06          &  		 	 	1.774755e-04           \\
+    totals.PF     & -2.208750e-04                             &  		 	 	-3.392370e-04          & -1.344331e-04                 \\
+    totals.FT     & -1.489884e-04                             &  		 	 	-2.458555e-04          &  		 	 	-1.389541e-04          \\
+    advanced.eFG. &  		 	 	-2.457892e-01                      &  		 	 	-5.944458e-01          &  		 	 	-3.044291e-01          \\
+    totals.PTS    &  		 	 	7.262524e-05                       &  		 	 	4.780697e-05           &  		 	 	9.900895e-05           \\
+    totals.2P     &  		 	 	1.445461e-05                       &  		 	 	-9.694172e-06          &  		 	 	8.882562e-05           \\
+    totals.MP     &  		 	 	3.519866e-06                       &  		 	 	-9.265994e-06          &  		 	 	 2.379677e-05          \\
+    \end{tabular} \\ \\
+
+\noindent \textbf{III. Forward and Backward Regression} \\
+
+\noindent Forward and backward regression methods were implemented using the full set of predictors. Two candidate models were selected (one for forward, one for backward) based on minimization of the AIC criterion (the minimum AIC for forward stepwise regression for our final selected model was -2021.76). For each candidate model, we examined the adjusted R\textsuperscript{2} and BIC as well. Based on these two criteria, we then found for each of the forward and backward step regression, that the BIC and adjusted R\textsuperscript{2} showed the same variables for each respective model. We then looked at the MSE for the orignal forward and backward model, as well as the 2 new models based on the new criteria. The model with the lowest estimated MSE at .00414 was the original forward regression model. The original backward regression gave a MSE of NA due to a missing observation. Looking at the residuals versus fitted for each model, we saw that they were all very similiar and closely scattered around zero, showing the assumptions for linear models are satisfied. We then looked at the misclassification rate. Our model selected from forward stepwise regression gave a misclassification rate of 0.4782609 - a slight improvement on the model chosen from ridge regression. \\
+
+    \begin{tabular}{llllll}
+    \textbf{Var}                     & \textbf{Est Coef  }           & \textbf{Std Error}           & \textbf{2-sided p-value}     & \textbf{95\% LB }             & \textbf{95\% UB}              \\
+       	 	 	(Intercept)      &  		 	 	5.647e-01     &  		 	 	1.650e-01    &  		 	 	0.001        &  		 	 	2.402e-01     &  		 	 	8.891e-01     \\
+     		 	 	advanced.WS      &  		 	 	3.410e-02     &  		 	 	3.504e-03    &  		 	 	< 2e-16      &  		 	 	2.721e-02     &  		 	 	4.099e-02     \\
+     		 	 	Salary           &  		 	 	3.140e+00     &  		 	 	9.087e-01    &  		 	 	0.001        &  		 	 	1.353e+00     &  		 	 	4.927e+00     \\
+     		 	 	advanced.USG.    &  		 	 	-2.975e-04    &  		 	 	2.908e-03    &  		 	 	0.919        &  		 	 	-6.016e-03    &  		 	 	5.421e-03     \\
+     		 	 	totals.FT        &  		 	 	-3.054e-04    &  		 	 	9.193e-05    &  		 	 	0.001        &  		 	 	-4.862e-04    &  		 	 	-1.246e-04    \\
+     		 	 	advanced.TOV.    &  		 	 	6.238e-03     &  		 	 	3.025e-03    &  		 	 	0.040        &  		 	 	2.889e-04     &  		 	 	1.219e-02     \\
+     		 	 	advanced.TS.     &  		 	 	-1.028e+00    &  		 	 	1.765e-01    &  		 	 	1.290e-08    &  		 	 	-1.375e+00    &  		 	 	-6.806e-01    \\
+     		 	 	totals.PF        &  		 	 	-3.448e-04    &  		 	 	1.009e-04    &  		 	 	0.001        &  		 	 	-5.433e-04    &  		 	 	-1.464e-04    \\
+     		 	 	advanced.AST.    &  		 	 	-1.252e-03    &  		 	 	5.303e-04    &  		 	 	0.019        &  		 	 	-2.295e-03    &  		 	 	-2.093e-04    \\
+     		 	 	totals.FG        &  		 	 	-9.456e-05    &  		 	 	1.643e-04    &  		 	 	0.565        &  		 	 	-4.177e-04    &  		 	 	2.286e-04     \\
+     		 	 	totals.MP        &  		 	 	-1.489e-04    &  		 	 	2.891e-05    &  		 	 	4.310e-07    &  		 	 	-2.058e-04    &  		 	 	-9.203e-05    \\
+     		 	 	advanced.PER     &  		 	 	-4.903e-03    &  		 	 	3.262e-03    &  		 	 	0.134        &  		 	 	-1.132e-02    &  		 	 	1.513e-03     \\
+     		 	 	totals.TOV       &  		 	 	5.163e-04     &  		 	 	2.087e-04    &  		 	 	0.014        &  		 	 	1.060e-04     &  		 	 	9.266e-04     \\
+     		 	 	advanced.STL.    &  		 	 	-1.492e-02    &  		 	 	6.075e-03    &  		 	 	0.015        &  		 	 	-2.686e-02    &  		 	 	-2.970e-03    \\
+     		 	 	totals.PTS       &  		 	 	1.946e-04     &  		 	 	8.963e-05    &  		 	 	0.031        &  		 	 	1.832e-05     &  		 	 	3.709e-04     \\
+    \end{tabular} \\ \\
+
+
+<<results=HIDE,echo=FALSE,fig=FALSE>>=
+mvp<-read.csv("fulltable_new_1.csv")
+library("MASS", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")
+fit<-lm(Pts.Won~Salary+advanced.WS48+advanced.WS+advanced.DWS +advanced.OWS+advanced.DRtg+advanced.ORtg+advanced.USG.+advanced.TOV.+advanced.BLK.+advanced.STL.+advanced.AST.+advanced.TRB.+advanced.DRB.+advanced.ORB.+advanced.3PAr +advanced.FTr+advanced.eFG.+advanced.TS.+advanced.PER+totals.PTS+totals.PF +totals.TOV+totals.BLK+totals.STL+totals.AST+totals.TRB+totals.DRB+totals.ORB+totals.FT.+totals.FTA+totals.FT+totals.2P.+totals.2PA+ totals.2P+totals.3P.+totals.3PA+totals.3P+totals.FG.+totals.FGA+totals.FG+totals.MP+totals.GS+totals.G+totals.Age+totals.Pos,data=mvp)
+fitbackward<-lm(Pts.Won~Salary + advanced.DWS + advanced.OWS + advanced.DRtg + 
+    advanced.ORtg + advanced.TOV. + advanced.BLK. + advanced.TRB. + 
+    advanced.DRB. + advanced.ORB. + advanced.FTr + advanced.eFG. + 
+    advanced.TS. + advanced.PER + totals.PF + totals.TOV + totals.FT. + 
+    totals.2PA + totals.3PA + totals.MP,data=mvp,na.action=na.omit,trace=0)
+fitbackward<-lm(Pts.Won~Salary + advanced.DWS + advanced.OWS + advanced.DRtg + 
+    advanced.ORtg + advanced.TOV. + advanced.BLK. + advanced.TRB. + 
+    advanced.DRB. + advanced.ORB. + advanced.FTr + advanced.eFG. + 
+    advanced.TS. + advanced.PER + totals.PF + totals.TOV + totals.FT. + 
+    totals.2PA + totals.3PA + totals.MP,data=mvp,na.action=na.omit)
+min.model<-lm(Pts.Won~1,data=mvp)
+fwd.model<-step(min.model,direction="forward",scope=(~Salary+advanced.WS48+advanced.WS+advanced.DWS +advanced.OWS+advanced.DRtg+advanced.ORtg+advanced.USG.+advanced.TOV.+advanced.BLK.+advanced.STL.+advanced.AST.+advanced.TRB.+advanced.DRB.+advanced.ORB.+advanced.3PAr +advanced.FTr+advanced.eFG.+advanced.TS.+advanced.PER+totals.PTS+totals.PF +totals.TOV+totals.BLK+totals.STL+totals.AST+totals.TRB+totals.DRB+totals.ORB+totals.FT.+totals.FTA+totals.FT+totals.2P.+totals.2PA+ totals.2P+totals.3P.+totals.3PA+totals.3P+totals.FG.+totals.FGA+totals.FG+totals.MP+totals.GS+totals.G+totals.Age+totals.Pos),trace=0)
+fitforward<-lm(Pts.Won ~ advanced.WS + Salary + advanced.USG. + 
+    totals.FT + advanced.TOV. + advanced.TS. + totals.PF + advanced.AST. + 
+    totals.FG + totals.MP + advanced.PER + totals.TOV + advanced.STL. + 
+    totals.PTS,data=mvp)
+AIC<-(-2021.76)
+AIC
+fitforward
+#summary(fitforward)
+#confint(fitforward,level=.95)
+library("leaps", lib.loc="/Library/Frameworks/R.framework/Versions/3.0/Resources/library")
+r<-regsubsets(Pts.Won ~ advanced.WS + Salary + advanced.USG. + 
+    totals.FT + advanced.TOV. + advanced.TS. + totals.PF + advanced.AST. + 
+    totals.FG + totals.MP + advanced.PER + totals.TOV + advanced.STL. + 
+    totals.PTS,data=mvp,nbest=10)
+r.1<-regsubsets(Pts.Won~Salary + advanced.DWS + advanced.OWS + advanced.DRtg + 
+    advanced.ORtg + advanced.TOV. + advanced.BLK. + advanced.TRB. + 
+    advanced.DRB. + advanced.ORB. + advanced.FTr + advanced.eFG. + 
+    advanced.TS. + advanced.PER + totals.PF + totals.TOV + totals.FT. + 
+    totals.2PA + totals.3PA + totals.MP,data=mvp,nbest=10)
+plot(r,scale="adjr2")
+plot(r,scale="bic")    
+ new.fit.r<-lm(Pts.Won ~ advanced.WS + Salary + advanced.TOV. + advanced.TS. + totals.PF + 
+    totals.FG + totals.MP + advanced.STL.,data=mvp)
+plot(r.1,scale="bic")
+plot(r.1,scale="adjr2")    
+    
+ new.fit.r.1<-lm(Pts.Won~Salary + advanced.DWS + advanced.OWS + advanced.DRtg + 
+    advanced.ORtg + totals.PF + totals.MP,data=mvp)   
+
+p<-predict(new.fit.r,mvp)
+p.1<-predict(new.fit.r.1,mvp)
+p.2<-predict(fitforward,mvp)
+p.3<-predict(fitbackward,mvp)
+resid<-p-mvp$Pts.Won
+resid.1<-p.1-mvp$Pts.Won
+resid.2<-p.2-mvp$Pts.Won
+resid.3<-p.3-mvp$Pts.Won
+plot(p,resid,main="Forward Regression Adjusted with BIC and R^2")
+plot(p.1,resid.1,main="Backward Regression Adjusted with BIC and R^2")
+plot(p.2,resid.2,main="Original Forward Regression")
+plot(p.3,resid.3,main="Original Backward Regression")
+
+mse<-sum((mvp$Pts.Won-p)^2)/374
+mse.1<-sum((mvp$Pts.Won-p.1)^2)/374
+mse.2<-sum((mvp$Pts.Won-p.2)^2)/374
+mse.3<-sum((mvp$Pts.Won-p.3)^2)/374
+
+mse.total<-data.frame(mse,mse.1,mse.2,NA)
+names(mse.total)<-c("Forward Regression Adjusted with BIC and R^2","Backward Regression Adjusted with BIC and R^2","Original Forward Regression","Original Backward Regression")
+
+winner<-mvp$winner
+a = mat.or.vec(23,1)
+a[1]=which.max(p.2[1:18])
+a[2]=which.max(p.2[19:35]) + 18
+a[3]=which.max(p.2[36:54]) + 35
+a[4]=which.max(p.2[55:74]) + 54
+a[5]=which.max(p.2[75:91]) + 74
+a[6]=which.max(p.2[92:105]) + 91
+a[7]=which.max(p.2[106:122]) + 105
+a[8]=which.max(p.2[123:137]) + 122
+a[9]=which.max(p.2[138:154]) + 137
+a[10]=which.max(p.2[155:174]) + 154
+a[11]=which.max(p.2[175:193]) + 174
+a[12]=which.max(p.2[194:209]) + 193
+a[13]=which.max(p.2[210:226]) + 209
+a[14]=which.max(p.2[227:244]) + 226
+a[15]=which.max(p.2[245:257]) + 244
+a[16]=which.max(p.2[258:273]) + 257
+a[17]=which.max(p.2[274:289]) + 273
+a[18]=which.max(p.2[290:300]) + 289
+a[19]=which.max(p.2[301:317]) + 300
+a[20]=which.max(p.2[318:334]) + 317
+a[21]=which.max(p.2[335:346]) + 334
+a[22]=which.max(p.2[347:361]) + 346
+a[23]=which.max(p.2[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.3 = (sum((b - winner)^2)/2)/23
+mis.rate.3
+
+
+
+a = mat.or.vec(23,1)
+a[1]=which.max(p.1[1:18])
+a[2]=which.max(p.1[19:35]) + 18
+a[3]=which.max(p.1[36:54]) + 35
+a[4]=which.max(p.1[55:74]) + 54
+a[5]=which.max(p.1[75:91]) + 74
+a[6]=which.max(p.1[92:105]) + 91
+a[7]=which.max(p.1[106:122]) + 105
+a[8]=which.max(p.1[123:137]) + 122
+a[9]=which.max(p.1[138:154]) + 137
+a[10]=which.max(p.1[155:174]) + 154
+a[11]=which.max(p.1[175:193]) + 174
+a[12]=which.max(p.1[194:209]) + 193
+a[13]=which.max(p.1[210:226]) + 209
+a[14]=which.max(p.1[227:244]) + 226
+a[15]=which.max(p.1[245:257]) + 244
+a[16]=which.max(p.1[258:273]) + 257
+a[17]=which.max(p.1[274:289]) + 273
+a[18]=which.max(p.1[290:300]) + 289
+a[19]=which.max(p.1[301:317]) + 300
+a[20]=which.max(p.1[318:334]) + 317
+a[21]=which.max(p.1[335:346]) + 334
+a[22]=which.max(p.1[347:361]) + 346
+a[23]=which.max(p.1[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.2 = (sum((b - winner)^2)/2)/23
+mis.rate.2
+
+a = mat.or.vec(23,1)
+a[1]=which.max(p[1:18])
+a[2]=which.max(p[19:35]) + 18
+a[3]=which.max(p[36:54]) + 35
+a[4]=which.max(p[55:74]) + 54
+a[5]=which.max(p[75:91]) + 74
+a[6]=which.max(p[92:105]) + 91
+a[7]=which.max(p[106:122]) + 105
+a[8]=which.max(p[123:137]) + 122
+a[9]=which.max(p[138:154]) + 137
+a[10]=which.max(p[155:174]) + 154
+a[11]=which.max(p[175:193]) + 174
+a[12]=which.max(p[194:209]) + 193
+a[13]=which.max(p[210:226]) + 209
+a[14]=which.max(p[227:244]) + 226
+a[15]=which.max(p[245:257]) + 244
+a[16]=which.max(p[258:273]) + 257
+a[17]=which.max(p[274:289]) + 273
+a[18]=which.max(p[290:300]) + 289
+a[19]=which.max(p[301:317]) + 300
+a[20]=which.max(p[318:334]) + 317
+a[21]=which.max(p[335:346]) + 334
+a[22]=which.max(p[347:361]) + 346
+a[23]=which.max(p[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate.1 = (sum((b - winner)^2)/2)/23
+mis.rate.1
+
+
+a = mat.or.vec(23,1)
+a[1]=which.max(p.3[1:18])
+a[2]=which.max(p.3[19:35]) + 18
+a[3]=which.max(p.3[36:54]) + 35
+a[4]=which.max(p.3[55:74]) + 54
+a[5]=which.max(p.3[75:91]) + 74
+a[6]=which.max(p.3[92:105]) + 91
+a[7]=which.max(p.3[106:122]) + 105
+a[8]=which.max(p.3[123:137]) + 122
+a[9]=which.max(p.3[138:154]) + 137
+a[10]=which.max(p.3[155:174]) + 154
+a[11]=which.max(p.3[175:193]) + 174
+a[12]=which.max(p.3[194:209]) + 193
+a[13]=which.max(p.3[210:226]) + 209
+a[14]=which.max(p.3[227:244]) + 226
+a[15]=which.max(p.3[245:257]) + 244
+a[16]=which.max(p.3[258:273]) + 257
+a[17]=which.max(p.3[274:289]) + 273
+a[18]=which.max(p.3[290:300]) + 289
+a[19]=which.max(p.3[301:317]) + 300
+a[20]=which.max(p.3[318:334]) + 317
+a[21]=which.max(p.3[335:346]) + 334
+a[22]=which.max(p.3[347:361]) + 346
+a[23]=which.max(p.3[362:374]) + 361
+b = mat.or.vec(374,1)
+for (q in 1:23){
+  b[a[q]]=1
+}
+mis.rate = (sum((b - winner)^2)/2)/23
+mis.rate
+total.misrate<-data.frame(mis.rate.1,mis.rate.2,mis.rate.3,mis.rate)
+names(total.misrate)<-c("Forward Regression Adjusted with BIC and R^2","Backward Regression Adjusted with BIC and R^2","Original Forward Regression","Original Backward Regression")
+@
+
+<<echo=FALSE,fig=TRUE>>=
+plot(p.2,resid.2,main="Residual Plot for Forward Stepwise Regression",xlab="Fitted Values",ylab="Residual")
+@
+
+<<fig=TRUE>>=
+plot(r,scale="adjr2")
+@
+
+\begin{center}
+\textbf{Code and Author Contributions}  
+\end{center}
+
+\noindent Our data set as well as R code for data cleaning can be found here: \url{www.github.com/velaraptor/nba_mvp_metric}. This Latex document was created using R Sweave. Code for this document, which includes all computations for analysis, can be found through the same github link. C.V. handled data cleaning and coding/analysis for stepwise regression. D.S. handled coding/analysis of ridge regression. Paper and presentation were prepared jointly.
+
+\begin{center}
+\textbf{References}  
+\end{center} 
+
+\noindent 1. \url{www.basketball-reference.com} \\
+\noindent 2. \url{www.eskimo.com/~pbender} \\
+\noindent 3. H{\"a}rdle, W., Simar, L. (2012) Applied Multivariate Statistical Analysis. 3rd ed., Springer Verlag, Heidelberg. ISBN 978-3-642-17228-1, e-ISBN 978-3-642-17229-8 (539 p), DOI:10.1007/978-3-642-17229-8 \\
+\noindent 4. Kutner, M., Nachtsteim, C., Neter, J. (2004) Applied Linear Regression Models. 4th ed., McGraw-Hill Irwin. \\
+\noindent 5. \url{http://fansided.com/2014/04/22/kevin-durant-lebron-james-meaning-mvp/#!Hf1Gk}  
+
+
+
+\end{document}
