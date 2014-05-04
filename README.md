@@ -54,6 +54,29 @@ as there are many recurring players in our sample.
 
 Page with our results can be seen at http://velaraptor.github.io/nba_mvp_metric/
 
+
+
+Explanation of Variables
+PER -- Player Efficiency Rating; a measure of per-minute production standardized such that the league average is 15
+TS% -- True Shooting Percentage; a measure of shooting effeciency that takes into account 2-point field goals, 3-point field goals, and free throws
+eFG% -- Effective Field Goal Percentage; this statistic adjusts for the fact that a 3-point field goal is worth one more point than a 2-point field goal
+FTr -- Free Throw Attempt Rate-Number of FT Attempts Per FG Attempt
+3PAr -- 3-Point Attempt Rate-Percentage of FG Attempts from 3-Point Range
+ORB% -- Offensive Rebound Percentage; an estimate of the percentage of available offensive rebounds a player grabbed while he was on the floor
+DRB% -- Defensive Rebound Percentage; an estimate of the percentage of available defensive rebounds a player grabbed while he was on the floor
+TRB% -- Total Rebound Percentage; an estimate of the percentage of available rebounds a player grabbed while he was on the floor
+AST% -- Assist Percentage; an estimate of the percentage of teammate field goals a player assisted while he was on the floor
+STL% -- Steal Percentage; an estimate of the percentage of opponent possessions that end with a steal by the player while he was on the floor
+BLK% -- Block Percentage; an estimate of the percentage of opponent two-point field goal attempts blocked by the player while he was on the floor
+TOV% -- Turnover Percentage; an estimate of turnovers per 100 plays
+USG% -- Usage Percentage; an estimate of the percentage of team plays used by a player while he was on the floor
+ORtg -- Offensive Rating: An estimate of points produced (players) or scored (teams) per 100 possession
+DRtg -- Defensive Rating: An estimate of points allowed per 100 possessions
+OWS -- Offensive Win Shares; an estimate of the number of wins contributed by a player due to his offense
+DWS -- Defensive Win Shares; an estimate of the number of wins contributed by a player due to his defense
+WS -- Win Shares; an estimate of the number of wins contributed by a player
+WS/48 -- Win Shares Per 48 Minutes; an estimate of the number of wins contributed by a player per 48 minutes (league average is approximately .100)
+
 Copyright 2014 Christopher Vela & Daniel Schwartz
 
 
