@@ -132,7 +132,7 @@ fitforward<-lm(Pts.Won ~ advanced.WS + Salary + advanced.USG. +
     totals.FG + totals.MP + advanced.PER + totals.TOV + advanced.STL. + 
     totals.PTS,data=mvp)
     
- nba_2014<-nba_2013.1[nba_2013.1$totals.G>=,]   
+ nba_2014<-nba_2013.1[nba_2013.1$totals.G>=76,]   
  nba_2014[is.na(nba_2014)]<-0
  pre<-predict(fitforward,newdata=nba_2014)
  m<-data.frame(nba_2014$Player,nba_2014$totals.G,pre)
